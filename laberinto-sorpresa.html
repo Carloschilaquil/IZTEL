@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>5 MESES 💌</title>
+<style>
+  :root{
+    --bg: #fdf2f6;
+    --bg2: #f7e4ee;
+    --wall: #d68fb0;
+    --wall-shadow: #b96d92;
+    --path: #fff8fb;
+    --accent: #e0578a;
+    --accent-dark: #c23e6d;
+    --text: #5a2a3f;
+    --card-bg: #ffffff;
+    --shadow: rgba(190, 90, 130, 0.25);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #2a1620;
+      --bg2: #351b28;
+      --wall: #7a3350;
+      --wall-shadow: #4d1f33;
+      --path: #40202f;
+      --accent: #ff7aa8;
+      --accent-dark: #ff9dbe;
+      --text: #ffdce8;
+      --card-bg: #3a1e2b;
+      --shadow: rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #2a1620;
+    --bg2: #351b28;
+    --wall: #7a3350;
+    --wall-shadow: #4d1f33;
+    --path: #40202f;
+    --accent: #ff7aa8;
+    --accent-dark: #ff9dbe;
+    --text: #ffdce8;
+    --card-bg: #3a1e2b;
+    --shadow: rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background: linear-gradient(160deg, var(--bg), var(--bg2));
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 24px 16px 40px;
+  }
+
+  h1{
+    font-size: clamp(1.3rem, 4vw, 1.9rem);
+    text-align:center;
+    margin: 4px 0 2px;
+  }
+  p.subtitle{
+    text-align:center;
+    margin: 0 0 16px;
+    opacity: 0.85;
+    max-width: 420px;
+    font-size: 0.95rem;
+  }
+
+  #gameWrap{
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  canvas{
+    width: 100%;
+    height: auto;
+    display:block;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px var(--shadow);
+    background: var(--path);
+    touch-action: none;
+  }
+
+  .hint{
+    text-align:center;
+    margin-top: 12px;
+    font-size: 0.85rem;
+    opacity: 0.75;
+  }
+
+  #controls{
+    display:grid;
+    grid-template-columns: repeat(3, 56px);
+    grid-template-rows: repeat(2, 56px);
+    gap: 8px;
+    margin-top: 18px;
+    justify-content: center;
+  }
+  #controls button{
+    border:none;
+    border-radius: 14px;
+    background: var(--accent);
+    color: white;
+    font-size: 1.4rem;
+    box-shadow: 0 4px 10px var(--shadow);
+    cursor:pointer;
+    user-select:none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #controls button:active{
+    background: var(--accent-dark);
+    transform: scale(0.95);
+  }
+  .b-up{grid-column:2; grid-row:1;}
+  .b-left{grid-column:1; grid-row:2;}
+  .b-down{grid-column:2; grid-row:2;}
+  .b-right{grid-column:3; grid-row:2;}
+
+  #overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(30,10,20,0.55);
+    backdrop-filter: blur(3px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity 0.5s ease;
+    z-index: 10;
+    padding: 20px;
+  }
+  #overlay.show{
+    opacity:1;
+    pointer-events:all;
+  }
+
+  #envelope{
+    width: min(90vw, 360px);
+    cursor:pointer;
+    perspective: 1000px;
+  }
+  .flap{
+    width:0; height:0;
+    border-left: 90px solid transparent;
+    border-right: 90px solid transparent;
+    border-top: 70px solid var(--accent-dark);
+    transform-origin: top;
+    transition: transform 0.6s ease;
+    position:relative;
+    z-index:2;
+    margin: 0 auto;
+  }
+  .env-body{
+    width: 180px;
+    height: 110px;
+    background: var(--accent);
+    border-radius: 0 0 8px 8px;
+    margin: 0 auto;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+  }
+  #envelope.open .flap{
+    transform: rotateX(180deg);
+  }
+  .envelope-label{
+    text-align:center;
+    color:#fff;
+    margin-top: 14px;
+    font-size: 0.95rem;
+    opacity: 0.95;
+  }
+
+  #letterCard{
+    display:none;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 28px 24px;
+    max-width: 380px;
+    width: 90vw;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.4);
+    text-align:center;
+    animation: pop 0.4s ease;
+  }
+  @keyframes pop{
+    from{ transform: scale(0.85); opacity:0; }
+    to{ transform: scale(1); opacity:1; }
+  }
+  #letterCard h2{
+    margin-top:0;
+    color: var(--accent-dark);
+  }
+  #letterCard p{
+    line-height:1.6;
+    font-size: 1.02rem;
+    white-space: pre-line;
+  }
+  #letterCard .signature{
+    margin-top: 18px;
+    font-style: italic;
+    opacity: 0.8;
+  }
+  #closeBtn{
+    margin-top: 18px;
+    border:none;
+    background: var(--accent);
+    color:#fff;
+    padding: 10px 20px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    cursor:pointer;
+  }
+
+  #restartBtn{
+    margin-top: 16px;
+    border:none;
+    background: transparent;
+    color: var(--accent-dark);
+    text-decoration: underline;
+    cursor:pointer;
+    font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+
+  <h1>HOLA ITZZEEEEEL 5 MESEEEEES 💗</h1>
+  <p class="subtitle">REFERENCIA A MAZE RUNNER.</p>
+
+  <div id="gameWrap">
+    <canvas id="maze"></canvas>
+  </div>
+
+  <p class="hint">Usa las flechas del teclado o los botones de abajo</p>
+
+  <div id="controls">
+    <button class="b-up" data-dir="up">↑</button>
+    <button class="b-left" data-dir="left">←</button>
+    <button class="b-down" data-dir="down">↓</button>
+    <button class="b-right" data-dir="right">→</button>
+  </div>
+
+  <button id="restartBtn">Reiniciar laberinto</button>
+
+  <div id="overlay">
+    <div id="envUI">
+      <div id="envelope">
+        <div class="flap"></div>
+        <div class="env-body"></div>
+        <div class="envelope-label">Toca el sobre para abrirlo</div>
+      </div>
+    </div>
+    <div id="letterCard">
+      <h2>HOLAAAAA</h2>
+      <p id="letterText"> HOLA PIXEEEEEL, primer mes después de tu regreso de winnipeg, y la neta ya me hacías mucha falta,
+        me pone muy feliz poder volver a estar pegado a ti. Muchas gracias por aguantarme también a mi estos 5 meses,y esperemos que sean muchos más.
+        Estoy listo para después de este periodo de examenes darte mi mejor versión y seguir esforzandome para ti.
+        Yo te quiero mucho pixel, felices 5 años. 
+            </p>
+      <div class="signature">Carlos</div>
+      <button id="closeBtn">cerrar</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('maze');
+  const ctx = canvas.getContext('2d');
+  const cols = 11, rows = 15;
+  let cellSize;
+  let grid = [];
+  let player = {x:0, y:0};
+  const goal = {x: cols-1, y: rows-1};
+  let won = false;
+
+  function Cell(x,y){
+    return {x,y, walls:{top:true,right:true,bottom:true,left:true}, visited:false};
+  }
+
+  function makeGrid(){
+    grid = [];
+    for(let y=0;y<rows;y++){
+      let row = [];
+      for(let x=0;x<cols;x++) row.push(Cell(x,y));
+      grid.push(row);
+    }
+  }
+
+  function idx(x,y){ return grid[y][x]; }
+
+  function neighbors(c){
+    const list = [];
+    const {x,y} = c;
+    if(y>0 && !idx(x,y-1).visited) list.push({cell:idx(x,y-1), dir:'top'});
+    if(x<cols-1 && !idx(x+1,y).visited) list.push({cell:idx(x+1,y), dir:'right'});
+    if(y<rows-1 && !idx(x,y+1).visited) list.push({cell:idx(x,y+1), dir:'bottom'});
+    if(x>0 && !idx(x-1,y).visited) list.push({cell:idx(x-1,y), dir:'left'});
+    return list;
+  }
+
+  const opposite = {top:'bottom', bottom:'top', left:'right', right:'left'};
+
+  function generateMaze(){
+    makeGrid();
+    let stack = [];
+    let current = idx(0,0);
+    current.visited = true;
+    stack.push(current);
+    while(stack.length){
+      current = stack[stack.length-1];
+      const options = neighbors(current);
+      if(options.length === 0){
+        stack.pop();
+        continue;
+      }
+      const choice = options[Math.floor(Math.random()*options.length)];
+      current.walls[choice.dir] = false;
+      choice.cell.walls[opposite[choice.dir]] = false;
+      choice.cell.visited = true;
+      stack.push(choice.cell);
+    }
+  }
+
+  function resizeCanvas(){
+    const wrapWidth = document.getElementById('gameWrap').clientWidth;
+    cellSize = Math.floor(wrapWidth / cols);
+    canvas.width = cellSize * cols;
+    canvas.height = cellSize * rows;
+    draw();
+  }
+
+  function draw(){
+    const styles = getComputedStyle(document.documentElement);
+    const pathColor = styles.getPropertyValue('--path').trim();
+    const wallColor = styles.getPropertyValue('--wall-shadow').trim();
+    const accent = styles.getPropertyValue('--accent').trim();
+
+    ctx.fillStyle = pathColor;
+    ctx.fillRect(0,0,canvas.width, canvas.height);
+
+    ctx.strokeStyle = wallColor;
+    ctx.lineWidth = Math.max(2, cellSize*0.08);
+    ctx.lineCap = 'round';
+
+    for(let y=0;y<rows;y++){
+      for(let x=0;x<cols;x++){
+        const c = idx(x,y);
+        const px = x*cellSize, py = y*cellSize;
+        ctx.beginPath();
+        if(c.walls.top){ ctx.moveTo(px,py); ctx.lineTo(px+cellSize,py); }
+        if(c.walls.right){ ctx.moveTo(px+cellSize,py); ctx.lineTo(px+cellSize,py+cellSize); }
+        if(c.walls.bottom){ ctx.moveTo(px,py+cellSize); ctx.lineTo(px+cellSize,py+cellSize); }
+        if(c.walls.left){ ctx.moveTo(px,py); ctx.lineTo(px,py+cellSize); }
+        ctx.stroke();
+      }
+    }
+
+    // goal heart
+    drawHeart(goal.x*cellSize + cellSize/2, goal.y*cellSize + cellSize/2, cellSize*0.35, accent);
+
+    // player
+    ctx.beginPath();
+    ctx.fillStyle = accent;
+    ctx.arc(player.x*cellSize + cellSize/2, player.y*cellSize + cellSize/2, cellSize*0.28, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawHeart(cx, cy, size, color){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(size/10, size/10);
+    ctx.beginPath();
+    ctx.moveTo(0, 3);
+    ctx.bezierCurveTo(0, 1, -3, -3, -6, -1);
+    ctx.bezierCurveTo(-9, 1, -6, 5, 0, 9);
+    ctx.bezierCurveTo(6, 5, 9, 1, 6, -1);
+    ctx.bezierCurveTo(3, -3, 0, 1, 0, 3);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function tryMove(dir){
+    if(won) return;
+    const c = idx(player.x, player.y);
+    if(dir==='up' && !c.walls.top) player.y -= 1;
+    else if(dir==='down' && !c.walls.bottom) player.y += 1;
+    else if(dir==='left' && !c.walls.left) player.x -= 1;
+    else if(dir==='right' && !c.walls.right) player.x += 1;
+    draw();
+    checkWin();
+  }
+
+  function checkWin(){
+    if(player.x === goal.x && player.y === goal.y){
+      won = true;
+      setTimeout(()=>{
+        document.getElementById('overlay').classList.add('show');
+      }, 250);
+    }
+  }
+
+  window.addEventListener('keydown', (e)=>{
+    const map = {ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right',
+                 w:'up', s:'down', a:'left', d:'right'};
+    if(map[e.key]){ e.preventDefault(); tryMove(map[e.key]); }
+  });
+
+  document.querySelectorAll('#controls button').forEach(btn=>{
+    btn.addEventListener('click', ()=> tryMove(btn.dataset.dir));
+  });
+
+  document.getElementById('restartBtn').addEventListener('click', ()=>{
+    won = false;
+    player = {x:0,y:0};
+    document.getElementById('overlay').classList.remove('show');
+    document.getElementById('envelope').classList.remove('open');
+    document.getElementById('envUI').style.display = 'block';
+    document.getElementById('letterCard').style.display = 'none';
+    generateMaze();
+    resizeCanvas();
+  });
+
+  document.getElementById('envelope').addEventListener('click', function(){
+    this.classList.add('open');
+    setTimeout(()=>{
+      document.getElementById('envUI').style.display = 'none';
+      document.getElementById('letterCard').style.display = 'block';
+    }, 500);
+  });
+
+  document.getElementById('closeBtn').addEventListener('click', ()=>{
+    document.getElementById('overlay').classList.remove('show');
+  });
+
+  window.addEventListener('resize', resizeCanvas);
+
+  generateMaze();
+  resizeCanvas();
+})();
+</script>
+</body>
+</html>
